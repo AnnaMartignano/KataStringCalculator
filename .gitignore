@@ -1,0 +1,5 @@
+#ignora queste cartelle
+#provare a caricare se github
+
+*.iml
+.idea/
