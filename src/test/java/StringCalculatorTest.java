@@ -41,5 +41,9 @@ public class StringCalculatorTest {
         //catturare le eccezioni senza usare il catch()
     }
 
+    @Test
+    public void accetta_delimitatori_customizzati() throws Exception {
+        assertEquals(3, (int) calculator.add("//;\n1;2"));
+    }
 }
 
