@@ -7,6 +7,7 @@ public class StringCalculator {
 
 
     public static final char DEFAULT_DELIMITER = ',';
+    public static final String REGEX_CUSTOM_DELIMITER = "//[^0-9]\n.+";
 
     public Integer add(String numbers) throws CaratteriNonAmmessiException {
         if (numbers.isEmpty()) {
@@ -17,26 +18,30 @@ public class StringCalculator {
             throw new CaratteriNonAmmessiException();
         }
 
-        //caso generico, eslude tutti i caratteri che non sono "digit" [^0-9]
-        char delimiter = delimiterOf(numbers);
+        return sum(numbers, delimiterOf(numbers));
+
+    }
+
+    private int sum(String numbers, char delimiter) {
         return stream(numbersFor(numbers, delimiter))
                 .mapToInt(Integer::parseInt)
                 .sum();
-
     }
 
     private char delimiterOf(String numbers) {
-        if(numbers.matches("//[^0-9]\n.+")) {
-            return numbers.substring(2,3).charAt(0);
-        }
-        return DEFAULT_DELIMITER;
+        return existCustomDelimiter(numbers) ?
+                numbers.substring(2, 3).charAt(0) :
+                DEFAULT_DELIMITER;
+    }
+
+    private boolean existCustomDelimiter(String numbers) {
+        return numbers.matches(REGEX_CUSTOM_DELIMITER);
     }
 
     private String numbersToEvaluate(String numbers) {
-        if(numbers.matches("//[^0-9]\n.+")) {
-            return numbers.substring(4);
-        }
-        return numbers;
+        return existCustomDelimiter(numbers) ?
+                numbers.substring(4) :
+                numbers;
     }
 
     private boolean existInvalidChars(String numbers) {
@@ -45,7 +50,6 @@ public class StringCalculator {
 
     private String[] numbersFor(String numbers, char delimiter) {
         numbers = numbersToEvaluate(numbers);
-        //return numbers.split("[" + delimiter + "||\n]");
         return numbers.split("[" + delimiter + "||\n]");
     }
 }
