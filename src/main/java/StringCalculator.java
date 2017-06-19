@@ -7,7 +7,8 @@ public class StringCalculator {
 
 
     public static final char DEFAULT_DELIMITER = ',';
-    public static final String REGEX_CUSTOM_DELIMITER = "//[^0-9]\n.+";
+    public static final String REGEX_CUSTOM_DELIMITER_FORMAT0 = "//[^0-9]\n.+";
+    public static final String REGEX_CUSTOM_DELIMITER_FORMAT1 = "/[^0-9]\n.+";
 
     public Integer add(String numbers) throws CaratteriNonAmmessiException {
         if (numbers.isEmpty()) {
@@ -29,19 +30,31 @@ public class StringCalculator {
     }
 
     private char delimiterOf(String numbers) {
-        return existCustomDelimiter(numbers) ?
-                numbers.substring(2, 3).charAt(0) :
-                DEFAULT_DELIMITER;
+        if( existCustomDelimiter(numbers)){
+            if(numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT0))
+                return numbers.substring(2,3).charAt(0);
+            else
+                return numbers.substring(1,2).charAt(0);
+        }
+        else{
+            return DEFAULT_DELIMITER;
+        }
     }
 
     private boolean existCustomDelimiter(String numbers) {
-        return numbers.matches(REGEX_CUSTOM_DELIMITER);
+        return (numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT0) ||
+        numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT1));
     }
 
     private String numbersToEvaluate(String numbers) {
-        return existCustomDelimiter(numbers) ?
-                numbers.substring(4) :
-                numbers;
+        if( existCustomDelimiter(numbers)){
+            if(numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT0))
+                return numbers.substring(4);
+            else
+                return numbers.substring(3);
+        }
+
+        return numbers;
     }
 
     private boolean existInvalidChars(String numbers) {

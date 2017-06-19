@@ -45,5 +45,10 @@ public class StringCalculatorTest {
     public void accetta_delimitatori_customizzati() throws Exception {
         assertEquals(3, (int) calculator.add("//;\n1;2"));
     }
+
+    @Test
+    public void accetta_un_solo_back_slash_per_definire_il_delimiter_custom() throws CaratteriNonAmmessiException {
+        assertEquals(3, (int) calculator.add("/;\n1;2"));
+    }
 }
 
