@@ -1,3 +1,5 @@
+import java.util.stream.IntStream;
+
 import static java.util.Arrays.*;
 
 /**
@@ -7,10 +9,11 @@ public class StringCalculator {
 
 
     public static final char DEFAULT_DELIMITER = ',';
-    public static final String REGEX_CUSTOM_DELIMITER_FORMAT0 = "//[^0-9]\n.+";
-    public static final String REGEX_CUSTOM_DELIMITER_FORMAT1 = "/[^0-9]\n.+";
+    public static final String REGEX_CUSTOM_DELIMITER_EXTENDED = "//[^0-9]\n.+";
+    public static final String REGEX_CUSTOM_DELIMITER_CONTRACT = "/[^0-9]\n.+";
+    private DelimiterFormat delimiterFormat = DelimiterFormat.None;
 
-    public Integer add(String numbers) throws CaratteriNonAmmessiException {
+    public Integer add(String numbers) throws CaratteriNonAmmessiException, NegativeNotAllowedException {
         if (numbers.isEmpty()) {
             return 0;
         }
@@ -19,50 +22,82 @@ public class StringCalculator {
             throw new CaratteriNonAmmessiException();
         }
 
-        return sum(numbers, delimiterOf(numbers));
+        int[] arrayOfNumbers = convertStringtoArray(numbers, delimiterOf(numbers));
+
+        if (existNegativeNumber(arrayOfNumbers)) {
+            throw new NegativeNotAllowedException(arrayOfNumbers);
+        }
+
+        return sum(arrayOfNumbers);
 
     }
 
-    private int sum(String numbers, char delimiter) {
-        return stream(numbersFor(numbers, delimiter))
-                .mapToInt(Integer::parseInt)
-                .sum();
+    private int[] convertStringtoArray(String numbers, char delimiter) {
+        numbers = numbersToEvaluate(numbers);
+        String[] stringOfNumbers = numbers.split("[" + delimiter + "||\n]");
+        return stream(stringOfNumbers).mapToInt(Integer::parseInt).toArray();
+    }
+
+    private int sum(int[] myArray) {
+        myArray = ignore1000PlusNumber(myArray);
+        return IntStream.of(myArray).sum();
+    }
+
+    private int[] ignore1000PlusNumber(int[] myArray) {
+        for (int i = 0; i < myArray.length; i++) {
+            if (myArray[i] > 1000) {
+                myArray[i] = 0;
+            }
+        }
+        return myArray;
     }
 
     private char delimiterOf(String numbers) {
-        if( existCustomDelimiter(numbers)){
-            if(numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT0))
-                return numbers.substring(2,3).charAt(0);
-            else
-                return numbers.substring(1,2).charAt(0);
-        }
-        else{
-            return DEFAULT_DELIMITER;
+        existCustomDelimiter(numbers);
+
+        switch (delimiterFormat) {
+            case None:
+                return DEFAULT_DELIMITER;
+            case Contract:
+                return numbers.substring(1, 2).charAt(0);
+            case Extended:
+                return numbers.substring(2, 3).charAt(0);
+            default:
+                return DEFAULT_DELIMITER;
         }
     }
 
-    private boolean existCustomDelimiter(String numbers) {
-        return (numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT0) ||
-        numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT1));
+    private void existCustomDelimiter(String numbers) {
+        if (numbers.matches(REGEX_CUSTOM_DELIMITER_EXTENDED)) {
+            delimiterFormat = DelimiterFormat.Extended;
+        } else if (numbers.matches(REGEX_CUSTOM_DELIMITER_CONTRACT)) {
+            delimiterFormat = DelimiterFormat.Contract;
+        }
     }
 
     private String numbersToEvaluate(String numbers) {
-        if( existCustomDelimiter(numbers)){
-            if(numbers.matches(REGEX_CUSTOM_DELIMITER_FORMAT0))
-                return numbers.substring(4);
-            else
+        switch (delimiterFormat) {
+            case None:
+                return numbers;
+            case Contract:
                 return numbers.substring(3);
+            case Extended:
+                return numbers.substring(4);
+            default:
+                return numbers;
         }
-
-        return numbers;
     }
 
     private boolean existInvalidChars(String numbers) {
         return numbers.contains(",\n") || numbers.contains("\n,");
     }
 
-    private String[] numbersFor(String numbers, char delimiter) {
-        numbers = numbersToEvaluate(numbers);
-        return numbers.split("[" + delimiter + "||\n]");
+    private boolean existNegativeNumber(int[] myArray) {
+        for (int i = 0; i < myArray.length; i++) {
+            if (myArray[i] < 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }
