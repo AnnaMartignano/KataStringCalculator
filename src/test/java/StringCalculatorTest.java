@@ -60,5 +60,10 @@ public class StringCalculatorTest {
     public void numeri_maggiori_di_1000_ignorati() throws Exception {
         assertEquals(2, (int) calculator.add("/;\n2;1001"));
     }
+
+    @Test
+    public void accetta_delimiter_di_più_caratteri() throws Exception {
+        assertEquals(6, (int) calculator.add("//[***]\\n1***2***3"));
+    }
 }
 

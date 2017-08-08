@@ -8,7 +8,7 @@ import static java.util.Arrays.*;
 public class StringCalculator {
 
 
-    public static final char DEFAULT_DELIMITER = ',';
+    public static final String DEFAULT_DELIMITER = ",";
     public static final String REGEX_CUSTOM_DELIMITER_EXTENDED = "//[^0-9]\n.+";
     public static final String REGEX_CUSTOM_DELIMITER_CONTRACT = "/[^0-9]\n.+";
 
@@ -21,11 +21,7 @@ public class StringCalculator {
             throw new CaratteriNonAmmessiException();
         }
 
-        DelimiterFormat delimiterFormat = findDelimiterFormat(numbers);
-
-        char delimiter = delimiterOf(numbers, delimiterFormat);
-        int[] arrayOfNumbers = convertStringtoArray(numbers, delimiter, delimiterFormat);
-
+        int[] arrayOfNumbers = convertStringtoArray(numbers);
 
         if (existNegativeNumber(arrayOfNumbers)) {
             throw new NegativeNotAllowedException(arrayOfNumbers);
@@ -35,10 +31,17 @@ public class StringCalculator {
 
     }
 
-    private int[] convertStringtoArray(String numbers, char delimiter, DelimiterFormat delimiterFormat) {
+    private int[] convertStringtoArray(String numbers) {
+        DelimiterFormat delimiterFormat = findDelimiterFormat(numbers);
+        String delimiter = delimiterOf(numbers, delimiterFormat);
+
+
         numbers = numbersToEvaluate(numbers, delimiterFormat);
         String[] stringOfNumbers = numbers.split("[" + delimiter + "||\n]");
-        return stream(stringOfNumbers).mapToInt(Integer::parseInt).toArray();
+        for (String stringOfNumber : stringOfNumbers) {
+            System.out.println(stringOfNumber);
+        }
+        return stream(stringOfNumbers).filter(s -> !s.isEmpty()).mapToInt(Integer::parseInt).toArray();
     }
 
     private int sum(int[] myArray) {
@@ -55,14 +58,16 @@ public class StringCalculator {
         return myArray;
     }
 
-    private char delimiterOf(String numbers, DelimiterFormat delimiterFormat) {
+    private String delimiterOf(String numbers, DelimiterFormat delimiterFormat) {
         switch (delimiterFormat) {
             case None:
                 return DEFAULT_DELIMITER;
             case Contract:
-                return numbers.substring(1, 2).charAt(0);
+                return numbers.substring(1, 2);
             case Extended:
-                return numbers.substring(2, 3).charAt(0);
+                return numbers.substring(2, 3);
+            case Multiple:
+                return numbers.substring(numbers.indexOf("[")+1,numbers.indexOf("]"));
             default:
                 return DEFAULT_DELIMITER;
         }
@@ -73,8 +78,9 @@ public class StringCalculator {
             return DelimiterFormat.Extended;
         } else if (numbers.matches(REGEX_CUSTOM_DELIMITER_CONTRACT)) {
             return DelimiterFormat.Contract;
-        }
-        else{
+        } else if (numbers.contains("[")){
+            return DelimiterFormat.Multiple;
+        } else {
             return DelimiterFormat.None;
         }
     }
@@ -87,6 +93,8 @@ public class StringCalculator {
                 return numbers.substring(3);
             case Extended:
                 return numbers.substring(4);
+            case Multiple:
+                return numbers.substring(numbers.indexOf("]")+3);
             default:
                 return numbers;
         }
