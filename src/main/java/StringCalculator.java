@@ -11,7 +11,6 @@ public class StringCalculator {
     public static final char DEFAULT_DELIMITER = ',';
     public static final String REGEX_CUSTOM_DELIMITER_EXTENDED = "//[^0-9]\n.+";
     public static final String REGEX_CUSTOM_DELIMITER_CONTRACT = "/[^0-9]\n.+";
-    private DelimiterFormat delimiterFormat = DelimiterFormat.None;
 
     public Integer add(String numbers) throws CaratteriNonAmmessiException, NegativeNotAllowedException {
         if (numbers.isEmpty()) {
@@ -22,7 +21,11 @@ public class StringCalculator {
             throw new CaratteriNonAmmessiException();
         }
 
-        int[] arrayOfNumbers = convertStringtoArray(numbers, delimiterOf(numbers));
+        DelimiterFormat delimiterFormat = findDelimiterFormat(numbers);
+
+        char delimiter = delimiterOf(numbers, delimiterFormat);
+        int[] arrayOfNumbers = convertStringtoArray(numbers, delimiter, delimiterFormat);
+
 
         if (existNegativeNumber(arrayOfNumbers)) {
             throw new NegativeNotAllowedException(arrayOfNumbers);
@@ -32,8 +35,8 @@ public class StringCalculator {
 
     }
 
-    private int[] convertStringtoArray(String numbers, char delimiter) {
-        numbers = numbersToEvaluate(numbers);
+    private int[] convertStringtoArray(String numbers, char delimiter, DelimiterFormat delimiterFormat) {
+        numbers = numbersToEvaluate(numbers, delimiterFormat);
         String[] stringOfNumbers = numbers.split("[" + delimiter + "||\n]");
         return stream(stringOfNumbers).mapToInt(Integer::parseInt).toArray();
     }
@@ -52,9 +55,7 @@ public class StringCalculator {
         return myArray;
     }
 
-    private char delimiterOf(String numbers) {
-        existCustomDelimiter(numbers);
-
+    private char delimiterOf(String numbers, DelimiterFormat delimiterFormat) {
         switch (delimiterFormat) {
             case None:
                 return DEFAULT_DELIMITER;
@@ -67,15 +68,18 @@ public class StringCalculator {
         }
     }
 
-    private void existCustomDelimiter(String numbers) {
+    private DelimiterFormat findDelimiterFormat(String numbers) {
         if (numbers.matches(REGEX_CUSTOM_DELIMITER_EXTENDED)) {
-            delimiterFormat = DelimiterFormat.Extended;
+            return DelimiterFormat.Extended;
         } else if (numbers.matches(REGEX_CUSTOM_DELIMITER_CONTRACT)) {
-            delimiterFormat = DelimiterFormat.Contract;
+            return DelimiterFormat.Contract;
+        }
+        else{
+            return DelimiterFormat.None;
         }
     }
 
-    private String numbersToEvaluate(String numbers) {
+    private String numbersToEvaluate(String numbers, DelimiterFormat delimiterFormat) {
         switch (delimiterFormat) {
             case None:
                 return numbers;
