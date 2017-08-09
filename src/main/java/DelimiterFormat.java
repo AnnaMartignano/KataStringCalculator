@@ -2,5 +2,5 @@
  * Created by annamartignano on 19/06/17.
  */
 public enum DelimiterFormat {
-    None, Contract, Multiple, Extended
+    None, One_Contract, One_Extended, One_Repeated, Multiple
 }

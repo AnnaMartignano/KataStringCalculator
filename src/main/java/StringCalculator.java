@@ -9,16 +9,19 @@ public class StringCalculator {
 
 
     public static final String DEFAULT_DELIMITER = ",";
-    public static final String REGEX_CUSTOM_DELIMITER_EXTENDED = "//[^0-9]\n.+";
-    public static final String REGEX_CUSTOM_DELIMITER_CONTRACT = "/[^0-9]\n.+";
+    public static final String ANY_CUSTOM_DELIMITER = "[^0-9 ^-]";
+    public static final String REGEX_ONE_CUSTOM_DELIMITER_EXTENDED = "//[^0-9]\n.+";
+    public static final String REGEX_ONE_CUSTOM_DELIMITER_CONTRACT = "/[^0-9]\n.+";
+    public static final String REGEX_REPEATED_CUSTOM_DELIMITER = "//\\[[^0-9 ^\\]]{2,}\\][^\\[].+";
+    public static final String REGEX_MULTIPLE_CUSTOM_DELIMITER = "//\\[[^0-9 ^\\]]{1,}\\]\\[[^0-9]{1,}\\].+";
 
-    public Integer add(String numbers) throws CaratteriNonAmmessiException, NegativeNotAllowedException {
+    public Integer add(String numbers) throws CharacterNotAllowedException, NegativeNotAllowedException {
         if (numbers.isEmpty()) {
             return 0;
         }
 
         if (existInvalidChars(numbers)) {
-            throw new CaratteriNonAmmessiException();
+            throw new CharacterNotAllowedException();
         }
 
         int[] arrayOfNumbers = convertStringtoArray(numbers);
@@ -28,19 +31,14 @@ public class StringCalculator {
         }
 
         return sum(arrayOfNumbers);
-
     }
 
     private int[] convertStringtoArray(String numbers) {
         DelimiterFormat delimiterFormat = findDelimiterFormat(numbers);
         String delimiter = delimiterOf(numbers, delimiterFormat);
+        numbers = removeDelimiterDefinition(numbers, delimiterFormat);
 
-
-        numbers = numbersToEvaluate(numbers, delimiterFormat);
         String[] stringOfNumbers = numbers.split("[" + delimiter + "||\n]");
-        for (String stringOfNumber : stringOfNumbers) {
-            System.out.println(stringOfNumber);
-        }
         return stream(stringOfNumbers).filter(s -> !s.isEmpty()).mapToInt(Integer::parseInt).toArray();
     }
 
@@ -58,43 +56,52 @@ public class StringCalculator {
         return myArray;
     }
 
+
+
     private String delimiterOf(String numbers, DelimiterFormat delimiterFormat) {
         switch (delimiterFormat) {
             case None:
                 return DEFAULT_DELIMITER;
-            case Contract:
+            case One_Contract:
                 return numbers.substring(1, 2);
-            case Extended:
+            case One_Extended:
                 return numbers.substring(2, 3);
+            case One_Repeated:
+                return numbers.substring(numbers.lastIndexOf("[")+1,numbers.lastIndexOf("]"));
             case Multiple:
-                return numbers.substring(numbers.indexOf("[")+1,numbers.indexOf("]"));
+                return ANY_CUSTOM_DELIMITER;
             default:
                 return DEFAULT_DELIMITER;
         }
     }
 
+
     private DelimiterFormat findDelimiterFormat(String numbers) {
-        if (numbers.matches(REGEX_CUSTOM_DELIMITER_EXTENDED)) {
-            return DelimiterFormat.Extended;
-        } else if (numbers.matches(REGEX_CUSTOM_DELIMITER_CONTRACT)) {
-            return DelimiterFormat.Contract;
-        } else if (numbers.contains("[")){
+        if (numbers.matches(REGEX_ONE_CUSTOM_DELIMITER_EXTENDED)) {
+            return DelimiterFormat.One_Extended;
+        } else if (numbers.matches(REGEX_ONE_CUSTOM_DELIMITER_CONTRACT)) {
+            return DelimiterFormat.One_Contract;
+        } else if (numbers.matches(REGEX_REPEATED_CUSTOM_DELIMITER)){
+            return DelimiterFormat.One_Repeated;
+        } else if (numbers.matches(REGEX_MULTIPLE_CUSTOM_DELIMITER)){
             return DelimiterFormat.Multiple;
-        } else {
+        } else{
             return DelimiterFormat.None;
         }
     }
 
-    private String numbersToEvaluate(String numbers, DelimiterFormat delimiterFormat) {
+    private String removeDelimiterDefinition(String numbers, DelimiterFormat delimiterFormat) {
         switch (delimiterFormat) {
             case None:
                 return numbers;
-            case Contract:
-                return numbers.substring(3);
-            case Extended:
-                return numbers.substring(4);
-            case Multiple:
+            case One_Contract:
+                return numbers.substring(numbers.indexOf("\n")+1);
+            case One_Extended:
+                return numbers.substring(numbers.indexOf("\n")+1);
+            case One_Repeated:
                 return numbers.substring(numbers.indexOf("]")+3);
+            case Multiple:
+                return numbers.substring(numbers.lastIndexOf("]")+3);
             default:
                 return numbers;
         }

@@ -1,4 +1,3 @@
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,7 +34,7 @@ public class StringCalculatorTest {
         assertEquals(6, (int) calculator.add("1,2\n3"));
     }
 
-    @Test(expected = CaratteriNonAmmessiException.class)
+    @Test(expected = CharacterNotAllowedException.class)
     public void questa_stringa_non_ci_piace() throws Exception {
         calculator.add("1,\n");
         //catturare le eccezioni senza usare il catch()
@@ -64,6 +63,11 @@ public class StringCalculatorTest {
     @Test
     public void accetta_delimiter_di_più_caratteri() throws Exception {
         assertEquals(6, (int) calculator.add("//[***]\\n1***2***3"));
+    }
+
+    @Test
+    public void accetta_multiple_delimiter() throws Exception {
+        assertEquals(6, (int) calculator.add("//[*][%]\\n1*2%3"));
     }
 }
 
